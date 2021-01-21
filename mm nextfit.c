@@ -90,7 +90,10 @@ static void *coalesce(void *bp)
     PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
     bp = PREV_BLKP(bp);
   }
+  // if (start_nextfit >= (char *)bp && start_nextfit < NEXT_BLKP((char *)bp))
+  // {
   start_nextfit = bp;
+  //}
   return bp;
 }
 static void *extend_heap(size_t words)
@@ -149,6 +152,7 @@ static void *find_fit(size_t asize)
 { // first fit 검색을 수행
   void *bp;
   // printf("**********find _ fit **********\n");
+
   for (bp = start_nextfit; GET_SIZE(HDRP(bp)) > 0; bp = NEXT_BLKP(bp))
   {
     // printf("case1 \n");
@@ -167,6 +171,43 @@ static void *find_fit(size_t asize)
       return bp;
     }
   }
+  /*
+    이 아래 코드는 제가 next_fit을 구현했던 코드인데, 한번 보시고 지워주시면 됩니당
+    저는 coalesce함수 맨 아래에서 이런 방식으로 if문을 걸어서 
+    start_nextfit 포인터가 시작점 <=> NEXT_BLKP 사이에 있는 경우에만 시작점으로 당겨주도록 했는데,
+    보석님 코드에서 이 조건을 걸면 오히려 점수가 떨어지더라고요?
+    제 코드에서 if문을 빼도 점수는 같았습니다. (보석님 원래 코드는 77점, 제 원래코드는 76점으로 거의동일했습니다.)
+    find_fit함수 로직차이같은데 시간동안 무슨 차이인지 찾질 못해서 일단 코드라도 첨부해서 보여드립니다,,
+    
+    next_fit함수말고 나머지 코드는 거의 같았어요!
+    
+    if (start_nextfit >= (char *)bp && start_nextfit < NEXT_BLKP((char *)bp))
+    {
+        start_nextfit = bp;
+    }
+
+  */
+  /*
+    bp = start_nextfit;
+    // Search from next_fit to the end of the heap
+    for (start_nextfit = bp; GET_SIZE(HDRP(start_nextfit)) > 0; start_nextfit = NEXT_BLKP(start_nextfit))
+    {
+        if (!GET_ALLOC(HDRP(start_nextfit)) && (asize <= GET_SIZE(HDRP(start_nextfit))))
+        {
+            // If a fit is found, return the address the of block pointer
+            return start_nextfit;
+        }
+    }
+    // If no fit is found by the end of the heap, start the search from the
+    // beginning of the heap to the original next_fit location
+    for (start_nextfit = heap_listp; start_nextfit < bp; start_nextfit = NEXT_BLKP(start_nextfit))
+    {
+        if (!GET_ALLOC(HDRP(start_nextfit)) && (asize <= GET_SIZE(HDRP(start_nextfit))))
+        {
+            return start_nextfit;
+        }
+    }
+    */
   // printf("case5 \n");
   return NULL;
 }
